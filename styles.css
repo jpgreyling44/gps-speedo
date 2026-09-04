@@ -80,7 +80,11 @@ body.light .face{fill:url(#faceGradLight)}
 /* ── kontroles ── */
 footer{margin-top:auto;padding:.5rem 1rem calc(1rem + env(safe-area-inset-bottom))}
 .controls{display:flex;gap:.55rem;align-items:center}
-.controls.smalls{display:grid;grid-template-columns:repeat(5,1fr);gap:.5rem;margin-top:.5rem}
+.controls.smalls{display:grid;grid-template-columns:repeat(5,1fr);gap:.45rem;margin-top:.5rem}
+.music-row{margin-top:.5rem}
+button.music{flex:1;background:linear-gradient(135deg,#c8002c,#ff1a1a);border-color:transparent;color:#fff;
+  font-size:1.08rem;padding:.85rem .5rem;letter-spacing:.01em}
+body.light button.music{background:linear-gradient(135deg,#c8002c,#ff1a1a)}
 button{border:0;border-radius:12px;font-weight:700;cursor:pointer;font-size:1rem;color:var(--txt);
   background:var(--panel);border:1px solid var(--line);padding:.8rem .5rem;transition:transform .06s,background .2s}
 button:active{transform:scale(.96)}
@@ -105,6 +109,8 @@ body.light button.on{color:#0b57d0}
   .controls.smalls{margin-top:.35rem;gap:.4rem}
   button{padding:.55rem .3rem;border-radius:11px}
   button.big{padding:.6rem .5rem}
+  button.music{font-size:.95rem;padding:.6rem .5rem}
+  .music-row{margin-top:.35rem}
   .hint{margin-top:.3rem;font-size:.62rem}
 }
 @media (orientation:landscape) and (min-height:521px){

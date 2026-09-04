@@ -1,4 +1,4 @@
-// GPS Spoedmeter — lees foon se GPS en wys lewendige spoed.
+// GPS Speedometer — live car speed from the phone's GPS. VW Golf 8 classic dial.
 'use strict';
 
 const $ = id => document.getElementById(id);
@@ -8,9 +8,10 @@ const els = {
   speedNum: $('speedNum'), speedUnit: $('speedUnit'),
   gpsDot: $('gpsDot'), gpsText: $('gpsText'), accText: $('accText'), clock: $('clock'),
   distVal: $('distVal'), maxVal: $('maxVal'), avgVal: $('avgVal'), tripTimeVal: $('tripTimeVal'),
-  btnStart: $('btnStart'), btnUnit: $('btnUnit'), btnWake: $('btnWake'), btnDemo: $('btnDemo'),
-  btnTheme: $('btnTheme'), btnMusic: $('btnMusic'),
-  demoBadge: $('demoBadge'), needle: $('needle'), banner: $('secureBanner'),
+  lblDist: $('lblDist'), lblTop: $('lblTop'), lblAvg: $('lblAvg'),
+  btnStart: $('btnStart'), btnReset: $('btnReset'), btnUnit: $('btnUnit'), btnWake: $('btnWake'),
+  btnDemo: $('btnDemo'), btnTheme: $('btnTheme'), btnMusic: $('btnMusic'),
+  demoBadge: $('demoBadge'), banner: $('secureBanner'),
 };
 
 const state = {
@@ -19,15 +20,13 @@ const state = {
   watchId: null, demoTimer: null, wakeLock: null,
   speedTarget: 0, speedShown: 0,
   last: null, lastTs: 0,
-  trip: { dist: 0, top: 0, movingMs: 0, startTs: null, movingStart: null },
-  gpsOk: false,
+  trip: { dist: 0, top: 0, movingMs: 0, startTs: null },
 };
 
-// ── eenhede ──
-const MPS = u => u === 'kmh' ? KMH : MPH;              // m/s -> vertoon-eenheid
+// ── units ──
 const vertoon = u => u === 'kmh' ? 'km/h' : 'mph';
-const uf = u => u === 'mph' ? 0.621371 : 1;            // km/h -> vertoon-eenheid
-function avgKph() {                                    // gemiddelde in km/h
+const uf = u => u === 'mph' ? 0.621371 : 1;            // km/h -> display unit
+function avgKph() {                                    // average in km/h
   const ms = state.trip.movingMs;
   if (!ms) return 0;
   return (state.trip.dist / 1000) / (ms / 3600000);
@@ -37,12 +36,13 @@ function setUnit(u) {
   state.unit = u; localStorage.setItem('speedo_unit', u);
   els.btnUnit.textContent = vertoon(u);
   els.speedUnit.textContent = vertoon(u);
-  els.maxVal.textContent = Math.round(state.trip.top * uf(u));
-  els.avgVal.textContent = Math.round(avgKph() * uf(u));
+  els.lblDist.textContent = u === 'mph' ? 'DIST (mi)' : 'DIST (km)';
+  els.lblTop.textContent = u === 'mph' ? 'TOP (mph)' : 'TOP (km/h)';
+  els.lblAvg.textContent = u === 'mph' ? 'AVG (mph)' : 'AVG (km/h)';
   updateDisplay();
 }
 
-// ── afstand (Haversine) ──
+// ── distance (Haversine) ──
 function hav(a, b) {
   const R = 6371000, toR = Math.PI / 180;
   const dLat = (b.lat - a.lat) * toR, dLon = (b.lon - a.lon) * toR;
@@ -55,48 +55,44 @@ function fmtTime(ms) {
   return (h ? String(h).padStart(2, '0') + ':' : '') + String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
 }
 
-function gpsOk(acc) { return acc != null && acc <= 20; }   // goeie GPS = <= 20 m
+function gpsOk(acc) { return acc != null && acc <= 20; }   // good GPS = <= 20 m
 
-// ── hoof-verwerking van een posisie ──
+// ── one position ──
 function onPos(pos) {
+  if (state.demo) return;                                  // demo owns the speed while active
   const c = pos.coords;
   const acc = c.accuracy != null ? c.accuracy : 999;
   const now = Date.now();
+  const good = gpsOk(acc);
 
-  setGps(acc <= 20 ? (c.speed != null ? 'on' : 'wait') : 'wait',
-    acc <= 20 ? 'GPS vas' : 'swak sein',
-    acc <= 20 ? '±' + Math.round(acc) + ' m' : '±' + Math.round(acc) + ' m');
+  setGps(good ? 'on' : 'wait', good ? 'GPS fix' : 'weak signal', '±' + Math.round(acc) + ' m');
 
   const cur = { lat: c.latitude, lon: c.longitude };
   const dt = state.lastTs ? (now - state.lastTs) / 1000 : 0;
 
-  // spoed: GPS s'n as beskikbaar, anders bereken uit afstand/tyd
+  // speed: GPS's own when available, else computed from distance/time
   let spd = null;
-  if (typeof c.speed === 'number' && isFinite(c.speed) && c.speed >= 0 && c.speed < 120 && gpsOk(acc)) {
+  if (typeof c.speed === 'number' && isFinite(c.speed) && c.speed >= 0 && c.speed < 120 && good) {
     spd = c.speed;
-  } else if (state.last && dt > 0.6 && dt < 12 && gpsOk(acc)) {
+  } else if (state.last && dt > 0.6 && dt < 12 && good) {
     const d = hav(state.last, cur);
-    if (d < 200) spd = d / dt;               // teen 200 m/s limiet teen GPS-uitskieters
+    if (d < 200) spd = d / dt;
   }
 
   if (spd != null) {
-    state.speedTarget = state.speedTarget === 0 ? spd : state.speedTarget * 0.65 + spd * 0.35;  // gladmaak
+    state.speedTarget = state.speedTarget === 0 ? spd : state.speedTarget * 0.6 + spd * 0.4;  // smoothing
     const kmh = state.speedTarget * KMH;
-    if (gpsOk(acc)) {
-      if (kmh > 1.2) state.trip.top = Math.max(state.trip.top, kmh);
-      els.maxVal.textContent = Math.round(state.trip.top * uf(state.unit));
-    }
+    if (good && kmh > 1.2) state.trip.top = Math.max(state.trip.top, kmh);
   }
 
-  // rit-ophoping
-  if (state.running && !state.paused && state.last && gpsOk(acc)) {
+  // trip accumulation
+  if (state.running && !state.paused && state.last && good) {
     const d = hav(state.last, cur);
-    if (d > 1.2) {                          // filter GPS-geraas
+    if (d > 1.2) {                                          // GPS noise filter
       state.trip.dist += d;
       const spdKmh = (d / dt) * KMH;
       if (spdKmh >= 1) state.trip.movingMs += dt * 1000;
-      els.distVal.textContent = (state.trip.dist * M2KM).toFixed(2);
-      els.avgVal.textContent = Math.round(avgKph() * uf(state.unit));
+      renderTrip();
     }
   }
 
@@ -108,16 +104,16 @@ function setGps(kind, txt, acc) {
   els.gpsDot.className = 'dot ' + kind;
   els.gpsText.textContent = txt;
   if (acc) els.accText.textContent = acc;
-  state.gpsOk = kind === 'on';
 }
 
 function onGeoError(err) {
-  const msg = err && err.code === 1 ? 'toestemming geweier' : err && err.code === 2 ? 'posisie onbeskikbaar' : 'tyd verstreke';
+  const msg = err && err.code === 1 ? 'permission denied'
+    : err && err.code === 2 ? 'unavailable' : 'timed out';
   setGps('off', 'GPS: ' + msg);
   if (!state.demo) els.accText.textContent = '–';
 }
 
-// ── VW Golf 8 Classic-dial (SVG): skaal 0-240, merke, syfers, naald ──
+// ── VW Golf 8 classic dial (SVG): 0-240 scale, ticks, numbers, needle ──
 function buildDial() {
   const svg = document.getElementById('dialSvg');
   if (!svg) return;
@@ -125,7 +121,7 @@ function buildDial() {
   const ticksG = document.getElementById('ticks');
   const numsG = document.getElementById('nums');
   const c = 100;
-  // merke: elke 10 km/h; lank (major) elke 20
+  // ticks every 10 km/h; long (major) every 20. Speed v sits at angle 240+v degrees (clockwise from 12 o'clock).
   for (let v = 0; v <= 240; v += 10) {
     const a = (240 + v) * Math.PI / 180;
     const ux = Math.sin(a), uy = -Math.cos(a);
@@ -137,7 +133,7 @@ function buildDial() {
     l.setAttribute('x2', (c + ux * r2).toFixed(2)); l.setAttribute('y2', (c + uy * r2).toFixed(2));
     ticksG.appendChild(l);
   }
-  // syfers elke 20 km/h, horisontaal, binne die merke
+  // numbers every 20 km/h, horizontal, inside the ticks
   for (let v = 0; v <= 240; v += 20) {
     const a = (240 + v) * Math.PI / 180;
     const r = 78;
@@ -149,7 +145,7 @@ function buildDial() {
     t.textContent = v;
     numsG.appendChild(t);
   }
-  // dun naald (R-blou), van die hub na buite
+  // slim needle, from hub outward (0 km/h = 240°, 240 km/h = 120° on screen)
   const mount = document.getElementById('needleMount');
   const needle = document.createElementNS(NS, 'g');
   needle.setAttribute('class', 'needle');
@@ -160,67 +156,69 @@ function buildDial() {
   mount.setAttribute('transform', 'translate(100 100) rotate(240)');
 }
 
-// vertoon: draai die naald (240° + km/h) en werk die digitale spoed by
+// display: rotate needle to (240 + km/h) and update the digital readout
 function updateDisplay() {
-  const kmh = Math.min(240, state.speedShown * KMH);
+  const kmh = Math.min(240, Math.max(0, state.speedShown * KMH));
   const nm = document.getElementById('needleMount');
   if (nm) nm.setAttribute('transform', 'translate(100 100) rotate(' + (240 + kmh).toFixed(2) + ')');
   els.speedNum.textContent = Math.round(kmh * uf(state.unit));
 }
 buildDial();
 
-// gladde vertoon-lus (speedShown is in m/s; elke raam na die teiken toe)
+// smooth display loop (speedShown is m/s; eased toward the target each frame)
 function loop() {
-  state.speedShown += (state.speedTarget - state.speedShown) * 0.18;
-  if (Math.abs(state.speedShown - state.speedTarget) < 0.3) state.speedShown = state.speedTarget;
+  state.speedShown += (state.speedTarget - state.speedShown) * 0.22;
+  if (Math.abs(state.speedShown - state.speedTarget) < 0.2) state.speedShown = state.speedTarget;
   updateDisplay();
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
 
-// ── horlosie ──
+// ── clock ──
 function tickClock() {
   const d = new Date();
   els.clock.textContent = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
 }
 setInterval(tickClock, 5000); tickClock();
 
-// ── GPS begin/stop ──
+// ── GPS start/stop ──
 function startGps() {
   if (!('geolocation' in navigator)) {
-    setGps('off', 'geen GPS op dié toestel');
+    setGps('off', 'no GPS on this device');
     return false;
   }
   if (state.watchId != null) return true;
   state.watchId = navigator.geolocation.watchPosition(onPos, onGeoError,
     { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 });
-  setGps('wait', 'GPS soek…');
+  setGps('wait', 'Searching GPS…');
   return true;
 }
 function stopGps() {
   if (state.watchId != null) { navigator.geolocation.clearWatch(state.watchId); state.watchId = null; }
 }
 
-// ── demo-modus (geen GPS nodig nie — toets/vertoon) ──
+// ── demo mode (no GPS needed — test/show) ──
 let demoV = 0;
 function startDemo() {
   state.demo = true; els.demoBadge.classList.remove('hidden');
+  stopGps();
   demoV = 0;
   state.demoTimer = setInterval(() => {
-    demoV = Math.max(0, Math.min(128, demoV + (Math.random() - 0.48) * 9));
-    const kmh = demoV;
-    state.speedTarget = kmh / KMH;
+    if (typeof window.__fixSpd === 'number') {
+      demoV = window.__fixSpd;                    // dev/test: fixed speed
+    } else {
+      demoV = Math.max(0, Math.min(128, demoV + (Math.random() - 0.48) * 9));
+    }
+    state.speedTarget = demoV / KMH;
     if (state.running && !state.paused) {
-      state.trip.top = Math.max(state.trip.top, kmh);
-      state.trip.dist += kmh / 3600 * 1.0 * 1000 * (Math.random() * 0.3 + 0.85); // ~1s interval
+      state.trip.top = Math.max(state.trip.top, demoV);
+      state.trip.dist += demoV / 3.6 * 1.0 * (Math.random() * 0.3 + 0.85);   // ~1 s intervals
       state.trip.movingMs += 1000;
       renderTrip();
     }
-    els.tripTimeVal.textContent = fmtTime(state.trip.movingMs);
-    updateDisplay();
   }, 1000);
-  setGps('on', 'DEMO loop');
-  els.accText.textContent = 'gesimuleer';
+  setGps('on', 'DEMO running');
+  els.accText.textContent = 'simulated';
 }
 function stopDemo() {
   state.demo = false;
@@ -229,65 +227,73 @@ function stopDemo() {
   state.demoTimer = null;
 }
 
-// ── rit-kontroles ──
+// ── trip controls ──
 function renderTrip() {
-  els.distVal.textContent = (state.trip.dist * M2KM).toFixed(2);
+  const km = state.trip.dist * M2KM;
+  els.distVal.textContent = (state.unit === 'mph' ? km * 0.621371 : km).toFixed(2);
   els.avgVal.textContent = Math.round(avgKph() * uf(state.unit));
   els.maxVal.textContent = Math.round(state.trip.top * uf(state.unit));
   els.tripTimeVal.textContent = fmtTime(state.trip.movingMs);
 }
 function resetTrip() {
-  state.trip = { dist: 0, top: 0, movingMs: 0, startTs: null, movingStart: null };
+  state.trip = { dist: 0, top: 0, movingMs: 0, startTs: null };
   state.last = null; state.lastTs = 0;
-  state.speedTarget = state.speedShown = 0;
+  state.speedTarget = 0; state.speedShown = 0;
   renderTrip(); updateDisplay();
 }
-function tripTicker() {   // werk tyd by terwyl daar beweeg word
+function tripTicker() {
   if (state.running && !state.paused) els.tripTimeVal.textContent = fmtTime(state.trip.movingMs + 500);
 }
 setInterval(tripTicker, 1000);
 
 els.btnStart.addEventListener('click', () => {
-  if (!state.running) {                       // begin
+  if (!state.running) {                       // start
     state.running = true; state.paused = false;
-    els.btnStart.textContent = '⏸ Pouse';
+    els.btnStart.textContent = '⏸ Pause';
     els.btnStart.classList.add('active');
     if (!state.demo) startGps();
     requestWake();
-  } else if (!state.paused) {                 // pouse
+  } else if (!state.paused) {                 // pause
     state.paused = true;
-    els.btnStart.textContent = '▶ Gaan voort';
+    els.btnStart.textContent = '▶ Resume';
     els.btnStart.classList.remove('active');
     releaseWake();
-  } else {                                    // voort
+  } else {                                    // resume
     state.paused = false;
-    els.btnStart.textContent = '⏸ Pouse';
+    els.btnStart.textContent = '⏸ Pause';
     els.btnStart.classList.add('active');
     if (!state.demo) startGps();
     requestWake();
   }
 });
 
-// langdruk Stop: hou "Stop" (reset) apart — tweede knoppie-ry is eenvoudiger:
-els.btnStart.addEventListener('contextmenu', e => { e.preventDefault(); doStop(); });
+els.btnReset.addEventListener('click', () => {
+  doStop();
+  resetTrip();
+  if (state.demo) { stopDemo(); setGps('off', 'GPS idle'); els.accText.textContent = '–'; }
+});
 function doStop() {
   state.running = false; state.paused = false;
-  els.btnStart.textContent = '▶ Begin';
+  els.btnStart.textContent = '▶ Start';
   els.btnStart.classList.remove('active');
   releaseWake();
-  if (!state.demo) { stopGps(); setGps('wait', 'GPS soek…'); }
+  if (!state.demo) { stopGps(); setGps('wait', 'Searching GPS…'); }
 }
 
-els.btnUnit.addEventListener('click', () => {
-  setUnit(state.unit === 'kmh' ? 'mph' : 'kmh');
-});
+els.btnUnit.addEventListener('click', () => setUnit(state.unit === 'kmh' ? 'mph' : 'kmh'));
 
 els.btnDemo.addEventListener('click', () => {
-  if (state.demo) { stopDemo(); if (state.running) startGps(); }
-  else { stopGps(); startDemo(); }
+  if (state.demo) {
+    stopDemo();
+    if (state.running) startGps();
+    else setGps('off', 'GPS idle');
+  } else {
+    stopGps();
+    startDemo();
+  }
 });
 
-// ── Dag/Nag-uitkyk (outo by tyd; druk vir handmatig) ──
+// ── day/night theme (auto by time; tap to set) ──
 const THEME_KEY = 'speedo_theme';
 let themeAuto = !localStorage.getItem(THEME_KEY);
 function applyTheme() {
@@ -296,7 +302,7 @@ function applyTheme() {
   document.body.classList.toggle('light', light);
   els.btnTheme.textContent = light ? '🌞' : '🌙';
   const m = document.querySelector('meta[name=theme-color]');
-  if (m) m.setAttribute('content', light ? '#e7edf4' : '#0b0e14');
+  if (m) m.setAttribute('content', light ? '#e9eef5' : '#07090f');
 }
 els.btnTheme.addEventListener('click', () => {
   themeAuto = false;
@@ -305,66 +311,54 @@ els.btnTheme.addEventListener('click', () => {
   applyTheme();
 });
 applyTheme();
-setInterval(applyTheme, 60000);   // outo-dag/nag elke minuut solank nie handmatig gekies nie
+setInterval(applyTheme, 60000);
 
-// ── YouTube Music-kortpad ──
+// ── YouTube Music — ONE BIG TAP, straight to the app ──
 els.btnMusic.addEventListener('click', () => {
   const ua = navigator.userAgent;
-  const androidChrome = /Android/i.test(ua) && /Chrome/i.test(ua) && !/Edg/i.test(ua);
-  const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-  if (androidChrome && !standalone) {
-    // Probeer die YouTube Music-app oopmaak; val terug na die webwerf
-    window.location.href = 'intent://music.youtube.com/#Intent;scheme=https;' +
-      'package=com.google.android.apps.youtube.music;' +
-      'S.browser_fallback_url=https%3A%2F%2Fmusic.youtube.com;end';
+  if (/Android/i.test(ua)) {
+    try {
+      window.location.href = 'intent://music.youtube.com/#Intent;scheme=https;' +
+        'package=com.google.android.apps.youtube.music;' +
+        'S.browser_fallback_url=https%3A%2F%2Fmusic.youtube.com;end';
+    } catch (e) {
+      window.open('https://music.youtube.com', '_blank');
+    }
   } else {
     window.open('https://music.youtube.com', '_blank');
   }
 });
 
-// skerm-aan hou (wakelock)
-async function requestWake() {
-  try {
-    if ('wakeLock' in navigator && !state.wakeLock) {
-      state.wakeLock = await navigator.wakeLock.request('screen');
-      state.wakeLock.addEventListener('release', () => { state.wakeLock = null; els.btnWake.classList.remove('on'); });
-      els.btnWake.classList.add('on');
-    }
-  } catch (e) { /* nie krities nie */ }
-}
-function releaseWake() {
-  if (state.wakeLock) { try { state.wakeLock.release(); } catch (e) {} state.wakeLock = null; }
-  els.btnWake.classList.remove('on');
-}
-els.btnWake.addEventListener('click', () => {
-  if (state.wakeLock) releaseWake();
-  else requestWake();
-});
+// allow free rotation even if a previous lock is still held
+try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {}
 
-// dokument sigbaarheid: laat GPS aanhou in agtergrond is nie nodig nie; by terugkeer herstel
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden && state.running && !state.paused && !state.demo) startGps();
 });
 
-// sekuriteit: geolocation vereis sekure konteks
 if (!('geolocation' in navigator) && !location.protocol.startsWith('https') && location.hostname !== 'localhost') {
   els.banner.classList.remove('hidden');
 }
 
-// opstart
+// startup
 setUnit(state.unit);
 resetTrip();
 
-// ── outomatiese toets-haak (ontwikkeling: ?autotest=1) ──
-if (new URLSearchParams(location.search).has('autotest')) {
+// ── automated test hook (development: ?autotest=1, optional &spd=120) ──
+const qp = new URLSearchParams(location.search);
+if (qp.has('autotest')) {
+  const fix = parseFloat(qp.get('spd'));
+  if (isFinite(fix)) window.__fixSpd = Math.max(0, Math.min(240, fix));
   startDemo();
   setTimeout(() => els.btnStart.click(), 300);
   setTimeout(() => {
-    state.speedShown = state.speedTarget;  // een "ingehaal" raam (headless stuur nie rAF nie)
+    if (typeof window.__fixSpd === 'number') { state.speedShown = state.speedTarget; }
     updateDisplay();
+    const nm = document.getElementById('needleMount');
     const res1 = {
       speed: els.speedNum.textContent,
       target_kmh: Math.round(state.speedTarget * KMH),
+      needle_rot: nm ? nm.getAttribute('transform') : 'none',
       dist: els.distVal.textContent,
       max: els.maxVal.textContent,
       gem: els.avgVal.textContent,
@@ -373,7 +367,7 @@ if (new URLSearchParams(location.search).has('autotest')) {
       demo: !els.demoBadge.classList.contains('hidden'),
       unit: els.speedUnit.textContent,
     };
-    els.btnUnit.click();   // wissel na mph
+    els.btnUnit.click();
     const res2 = { speed_mph: els.speedNum.textContent, unit: els.speedUnit.textContent };
     document.body.setAttribute('data-autotest', JSON.stringify({ ...res1, ...res2 }));
   }, 9000);

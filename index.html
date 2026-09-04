@@ -1,27 +1,27 @@
 <!DOCTYPE html>
-<html lang="af">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Spoedmeter</title>
-<meta name="description" content="Live GPS-spoedmeter vir die kar — spoed, afstand, maksimum en gemiddelde spoed.">
+<title>GPS Speedometer</title>
+<meta name="description" content="Live GPS speedometer for the car — speed, distance, top and average speed. VW Golf 8 style dial.">
 <meta name="theme-color" content="#07090f">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Spoedmeter">
+<meta name="apple-mobile-web-app-title" content="Speedometer">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div id="secureBanner" class="hidden banner">⚠ GPS benodig HTTPS of toestemming — gebruik Demo om te toets.</div>
+<div id="secureBanner" class="hidden banner">⚠ GPS needs HTTPS or permission — use Demo to test.</div>
 
 <header id="topbar">
   <div class="gps">
     <span id="gpsDot" class="dot off"></span>
-    <span id="gpsText">GPS soek…</span>
+    <span id="gpsText">GPS idle</span>
   </div>
   <div id="accText" class="dim">±– m</div>
   <div id="clock" class="dim">--:--</div>
@@ -57,25 +57,28 @@
   </div>
 
   <section id="stats" class="stats">
-    <div class="stat"><div class="stat-val" id="distVal">0.00</div><div class="stat-lbl">km afstand</div></div>
-    <div class="stat"><div class="stat-val" id="maxVal">0</div><div class="stat-lbl">maks km/h</div></div>
-    <div class="stat"><div class="stat-val" id="avgVal">0</div><div class="stat-lbl">gem km/h</div></div>
-    <div class="stat"><div class="stat-val" id="tripTimeVal">00:00</div><div class="stat-lbl">rytyd</div></div>
+    <div class="stat"><div class="stat-val" id="distVal">0.00</div><div class="stat-lbl" id="lblDist">DIST (km)</div></div>
+    <div class="stat"><div class="stat-val" id="maxVal">0</div><div class="stat-lbl" id="lblTop">TOP (km/h)</div></div>
+    <div class="stat"><div class="stat-val" id="avgVal">0</div><div class="stat-lbl" id="lblAvg">AVG (km/h)</div></div>
+    <div class="stat"><div class="stat-val" id="tripTimeVal">00:00</div><div class="stat-lbl">TIME</div></div>
   </section>
 </main>
 
 <footer>
   <div class="controls">
-    <button id="btnStart" class="big">▶ Begin</button>
+    <button id="btnStart" class="big">▶ Start</button>
+  </div>
+  <div class="controls music-row">
+    <button id="btnMusic" class="music" title="Open YouTube Music">🎵 YouTube Music</button>
   </div>
   <div class="controls smalls">
-    <button id="btnUnit" class="small" title="Wissel km/h / mph">km/h</button>
-    <button id="btnTheme" class="small" title="Dag/Nag-uitkyk">🌞</button>
-    <button id="btnWake" class="small" title="Hou skerm aan">☀</button>
-    <button id="btnMusic" class="small" title="YouTube Music oopmaak">🎵</button>
-    <button id="btnDemo" class="small" title="Demo-modus (geen GPS)">Demo</button>
+    <button id="btnUnit" class="small" title="Switch km/h / mph">km/h</button>
+    <button id="btnTheme" class="small" title="Day/Night theme">🌞</button>
+    <button id="btnWake" class="small" title="Keep screen on">☀</button>
+    <button id="btnDemo" class="small" title="Demo mode (no GPS)">Demo</button>
+    <button id="btnReset" class="small" title="Stop and reset trip">Reset</button>
   </div>
-  <div class="hint dim">GPS-spoed — moenie met die foon peuter terwyl jy bestuur nie. 🎵 + split-skerm vir musiek langsaan.</div>
+  <div class="hint dim">Car GPS speedometer — keep your eyes on the road.</div>
 </footer>
 
 <script>
