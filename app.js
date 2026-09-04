@@ -313,20 +313,9 @@ els.btnTheme.addEventListener('click', () => {
 applyTheme();
 setInterval(applyTheme, 60000);
 
-// ── YouTube Music — ONE BIG TAP, straight to the app ──
+// ── YouTube Music — ONE BIG TAP, opens the site in a new tab ──
 els.btnMusic.addEventListener('click', () => {
-  const ua = navigator.userAgent;
-  if (/Android/i.test(ua)) {
-    try {
-      window.location.href = 'intent://music.youtube.com/#Intent;scheme=https;' +
-        'package=com.google.android.apps.youtube.music;' +
-        'S.browser_fallback_url=https%3A%2F%2Fmusic.youtube.com;end';
-    } catch (e) {
-      window.open('https://music.youtube.com', '_blank');
-    }
-  } else {
-    window.open('https://music.youtube.com', '_blank');
-  }
+  window.open('https://music.youtube.com/', '_blank');
 });
 
 // allow free rotation even if a previous lock is still held
