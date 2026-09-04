@@ -9,6 +9,7 @@ const els = {
   gpsDot: $('gpsDot'), gpsText: $('gpsText'), accText: $('accText'), clock: $('clock'),
   distVal: $('distVal'), maxVal: $('maxVal'), avgVal: $('avgVal'), tripTimeVal: $('tripTimeVal'),
   btnStart: $('btnStart'), btnUnit: $('btnUnit'), btnWake: $('btnWake'), btnDemo: $('btnDemo'),
+  btnTheme: $('btnTheme'), btnMusic: $('btnMusic'),
   demoBadge: $('demoBadge'), needle: $('needle'), banner: $('secureBanner'),
 };
 
@@ -240,6 +241,41 @@ els.btnUnit.addEventListener('click', () => {
 els.btnDemo.addEventListener('click', () => {
   if (state.demo) { stopDemo(); if (state.running) startGps(); }
   else { stopGps(); startDemo(); }
+});
+
+// ── Dag/Nag-uitkyk (outo by tyd; druk vir handmatig) ──
+const THEME_KEY = 'speedo_theme';
+let themeAuto = !localStorage.getItem(THEME_KEY);
+function applyTheme() {
+  const h = new Date().getHours();
+  const light = themeAuto ? (h >= 6 && h < 19) : localStorage.getItem(THEME_KEY) === 'light';
+  document.body.classList.toggle('light', light);
+  els.btnTheme.textContent = light ? '🌞' : '🌙';
+  const m = document.querySelector('meta[name=theme-color]');
+  if (m) m.setAttribute('content', light ? '#e7edf4' : '#0b0e14');
+}
+els.btnTheme.addEventListener('click', () => {
+  themeAuto = false;
+  const nowLight = document.body.classList.contains('light');
+  localStorage.setItem(THEME_KEY, nowLight ? 'dark' : 'light');
+  applyTheme();
+});
+applyTheme();
+setInterval(applyTheme, 60000);   // outo-dag/nag elke minuut solank nie handmatig gekies nie
+
+// ── YouTube Music-kortpad ──
+els.btnMusic.addEventListener('click', () => {
+  const ua = navigator.userAgent;
+  const androidChrome = /Android/i.test(ua) && /Chrome/i.test(ua) && !/Edg/i.test(ua);
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  if (androidChrome && !standalone) {
+    // Probeer die YouTube Music-app oopmaak; val terug na die webwerf
+    window.location.href = 'intent://music.youtube.com/#Intent;scheme=https;' +
+      'package=com.google.android.apps.youtube.music;' +
+      'S.browser_fallback_url=https%3A%2F%2Fmusic.youtube.com;end';
+  } else {
+    window.open('https://music.youtube.com', '_blank');
+  }
 });
 
 // skerm-aan hou (wakelock)

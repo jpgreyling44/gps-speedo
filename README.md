@@ -1,39 +1,45 @@
-# GPS Spoedmeter
+# GPS Spoedmeter — Golf-uitgawe
 
-'n Lewendige spoedmeter vir die kar wat die foon se GPS gebruik.
-Geen bediener nodig nie — alles loop op die foon self.
+Lewendige spoedmeter wat die foon se GPS gebruik. Geoptimaliseer vir
+**landskap-montering in 'n ou kar** (VW Golf Mk1: geen infotainment nie —
+houer + foon), met dagmodus teen sonlig.
 
 ## Installeer op jou foon (S22/Android)
 
-1. Maak die app oop in **Chrome** op die foon (sien die lewendige URL hieronder).
-2. Tik ⋮ (kieslys) → **"Installeer app"** / **"Voeg by tuisskerm"**.
-3. 'n Ikoon verskyn op jou tuisskerm — dit maak volskerm oop soos 'n gewone app.
+1. Maak oop in **Chrome**: https://jpgreyling44.github.io/gps-speedo/
+2. ⋮ → **"Installeer app"** → ikoon op tuisskerm, volskerm, vanlyn.
 
-## Gebruik
+## Gebruik in die kar (Golf)
 
-- **▶ Begin** — begin die rit (vra GPS-toestemming die eerste keer).
-- **⏸ Pouse / ▶ Gaan voort** — pouse sonder om die rit te verloor.
-- **Langk druk op Begin** = Stop (stel rit terug). *(Op foon: gebruik die Demo/Stop-logika — Begin-knoppie wissel begin/pouse; 'n stop-rit word gedoen deur die rit-knoppie lank te druk of die bladsy te herlaai.)*
-- **km/h / mph** — wissel eenhede.
-- **☀** — hou die skerm aan terwyl jy ry (wakelock).
-- **Demo** — toetsmodus sonder GPS (willekeurige spoed).
+- **Draai die foon horisontaal** in die houer — die uitleg wissel outomaties
+  na landskap: meter links, statistiek regs, groot syfers.
+- **🌞/🌙** — dag- of nag-uitkyk. Outomaties by tyd (06:00-19:00 lig);
+  druk die knoppie om dit vas te stel.
+- **☀** — hou die skerm aan (wakelock) terwyl jy ry.
+- **km/h / mph** — eenhede.
+- **Demo** — toets sonder GPS.
 
-Waardes op die skerm: huidige spoed (groot), afstand, maksimum spoed,
-gemiddelde spoed en rystyd. GPS-status en akkuraatheid (± m) is bo.
+## YouTube Music
 
-## Wenke vir akkurate spoed
+'n Regte YouTube Music-speler KAN NIE binne die spoedmeter ingebed word nie —
+Google blokkeer dit (YouTube Music is 'n aparte app/diens, geen iframe/API vir
+die volle diens nie). Wat wel werk:
 
-- Gee die foon **GPS-toestemming** ("terwyl die app gebruik word").
-- Lê die foon plat met 'n oop stuk hemel — die eerste vasvat kan 10-30 s neem.
-- Akkuraatheid <= 20 m word as "GPS vas" beskou; beweging vinniger as 1.5 km/h tel.
-- Spoed kom van die GPS-chip (coords.speed), met 'n berekende rugsteun.
+- **🎵-knoppie** in die app maak YouTube Music dadelik oop (die app as dit
+  geïnstalleer is, anders die webwerf).
+- **Android-split-skerm**: druk die onlangse-apps-knoppie → tik die
+  Spoedmeter-ikoon → "Oop in gesplete skerm" → kies YouTube Music.
+  Nou sien jy spoed bo en musiek onder — perfek in landskap op die S22.
+
+## Akkuraatheid
+
+- GPS-toestemming "terwyl die app gebruik word"; lê die foon plat met oop hemel.
+- Eerste vasvat 10-30 s; akkuraatheid <= 20 m = "GPS vas".
+- Spoed kom van die GPS-chip, met 'n berekende rugsteun.
 
 ## Ontwikkeling
 
-- Statiese webapp: `index.html` + `styles.css` + `app.js` (geen raamwerk nie).
-- PWA: `manifest.webmanifest` + `sw.js` (offline nadat dit een keer gelaai is).
-- Toets lokaal: `python3 -m http.server 8751` → http://localhost:8751
-- Outo-toets: `http://localhost:8751/?autotest=1` skryf resultate na `data-autotest`.
-- Ikone: `python3 gen_icons.py`
-
-Lêers in `D:\jparibix\projects\gps-speedo`
+- Staties: `index.html` + `styles.css` + `app.js` (geen raamwerk nie).
+- PWA: `manifest.webmanifest` + `sw.js`. Toets: `python3 -m http.server 8751`
+- Outo-toets: `http://localhost:8751/?autotest=1` → lees `data-autotest`.
+- Ikone: `python3 gen_icons.py`.  Lêers: `D:\jparibix\projects\gps-speedo`
