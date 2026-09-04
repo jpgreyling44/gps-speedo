@@ -80,7 +80,7 @@ body.light .face{fill:url(#faceGradLight)}
 /* ── kontroles ── */
 footer{margin-top:auto;padding:.5rem 1rem calc(1rem + env(safe-area-inset-bottom))}
 .controls{display:flex;gap:.55rem;align-items:center}
-.controls.smalls{display:grid;grid-template-columns:repeat(5,1fr);gap:.45rem;margin-top:.5rem}
+.controls.smalls{display:grid;grid-template-columns:repeat(6,1fr);gap:.4rem;margin-top:.5rem}
 .music-row{margin-top:.5rem}
 button.music{flex:1;background:linear-gradient(135deg,#c8002c,#ff1a1a);border-color:transparent;color:#fff;
   font-size:1.08rem;padding:.85rem .5rem;letter-spacing:.01em}

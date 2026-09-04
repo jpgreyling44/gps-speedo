@@ -1,5 +1,5 @@
 // Spoedmeter service worker — laat die app vanlyn werk nadat dit een keer gelaai is.
-const CACHE = 'speedo-v6';
+const CACHE = 'speedo-v7';
 const PRECACHE = ['./', './index.html', './styles.css', './app.js', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png'];
 

@@ -9,8 +9,8 @@ const els = {
   gpsDot: $('gpsDot'), gpsText: $('gpsText'), accText: $('accText'), clock: $('clock'),
   distVal: $('distVal'), maxVal: $('maxVal'), avgVal: $('avgVal'), tripTimeVal: $('tripTimeVal'),
   lblDist: $('lblDist'), lblTop: $('lblTop'), lblAvg: $('lblAvg'),
-  btnStart: $('btnStart'), btnReset: $('btnReset'), btnUnit: $('btnUnit'), btnWake: $('btnWake'),
-  btnDemo: $('btnDemo'), btnTheme: $('btnTheme'), btnMusic: $('btnMusic'),
+  btnStart: $('btnStart'), btnReset: $('btnReset'), btnUnit: $('btnUnit'), btnFs: $('btnFs'),
+  btnWake: $('btnWake'), btnDemo: $('btnDemo'), btnTheme: $('btnTheme'), btnMusic: $('btnMusic'),
   demoBadge: $('demoBadge'), banner: $('secureBanner'),
 };
 
@@ -253,6 +253,7 @@ els.btnStart.addEventListener('click', () => {
     els.btnStart.classList.add('active');
     if (!state.demo) startGps();
     requestWake();
+    goFullscreen();                          // weg met die blaaier-raam terwyl jy ry
   } else if (!state.paused) {                 // pause
     state.paused = true;
     els.btnStart.textContent = '▶ Resume';
@@ -281,6 +282,21 @@ function doStop() {
 }
 
 els.btnUnit.addEventListener('click', () => setUnit(state.unit === 'kmh' ? 'mph' : 'kmh'));
+
+// ── fullscreen (weg met die blaaier-raam) ──
+function goFullscreen() {
+  const el = document.documentElement;
+  if (!document.fullscreenElement && el.requestFullscreen) {
+    el.requestFullscreen().catch(() => {});
+  }
+}
+els.btnFs.addEventListener('click', () => {
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  else goFullscreen();
+});
+document.addEventListener('fullscreenchange', () => {
+  els.btnFs.textContent = document.fullscreenElement ? '🗗' : '⛶';
+});
 
 els.btnDemo.addEventListener('click', () => {
   if (state.demo) {
@@ -313,9 +329,19 @@ els.btnTheme.addEventListener('click', () => {
 applyTheme();
 setInterval(applyTheme, 60000);
 
-// ── YouTube Music — ONE BIG TAP, opens the site in a new tab ──
+// ── YouTube Music — one big tap: opens the real app if installed, else the site ──
 els.btnMusic.addEventListener('click', () => {
-  window.open('https://music.youtube.com/', '_blank');
+  if (/Android/i.test(navigator.userAgent)) {
+    try {
+      window.location.href = 'intent://music.youtube.com/#Intent;scheme=https;' +
+        'package=com.google.android.apps.youtube.music;' +
+        'S.browser_fallback_url=https%3A%2F%2Fmusic.youtube.com%2F;end';
+    } catch (e) {
+      window.open('https://music.youtube.com/', '_blank');
+    }
+  } else {
+    window.open('https://music.youtube.com/', '_blank');
+  }
 });
 
 // allow free rotation even if a previous lock is still held
