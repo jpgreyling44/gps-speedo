@@ -30,14 +30,29 @@
 <main>
   <div class="gauge-wrap">
     <div class="gauge" id="gauge">
-      <div class="ring track" aria-hidden="true"></div>
-      <div class="ring prog" aria-hidden="true"></div>
-      <div id="gscale" class="gscale" aria-hidden="true"></div>
-      <div class="gauge-center">
-        <div class="speed"><span id="speedNum">0</span><span id="speedUnit" class="unit">km/h</span></div>
-        <div class="rbadge">R</div>
-        <div id="demoBadge" class="demo hidden">DEMO</div>
+      <svg id="dialSvg" class="dial" viewBox="0 0 200 200" aria-hidden="true">
+        <defs>
+          <radialGradient id="faceGradDark" cx="50%" cy="40%" r="80%">
+            <stop offset="0%" stop-color="#1a2132"/><stop offset="100%" stop-color="#0a0d15"/>
+          </radialGradient>
+          <radialGradient id="faceGradLight" cx="50%" cy="40%" r="80%">
+            <stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#d9e2ee"/>
+          </radialGradient>
+        </defs>
+        <circle class="face" cx="100" cy="100" r="97"/>
+        <circle class="rim" cx="100" cy="100" r="95.5" fill="none"/>
+        <g id="ticks"></g>
+        <g id="nums"></g>
+        <g id="needleMount"></g>
+        <g id="hub">
+          <circle class="hubCap" cx="100" cy="100" r="12"/>
+          <circle class="hubDot" cx="100" cy="100" r="4.6"/>
+        </g>
+      </svg>
+      <div class="digi">
+        <span id="speedNum">0</span><span id="speedUnit" class="unit">km/h</span><span class="rb">R</span>
       </div>
+      <div id="demoBadge" class="demo hidden">DEMO</div>
     </div>
   </div>
 

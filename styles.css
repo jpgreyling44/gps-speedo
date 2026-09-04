@@ -1,19 +1,19 @@
 :root{
   --bg:#07090f; --bg2:#0d1120; --panel:#0e1424; --line:#1d2740;
-  --g1:#0a0e1c; --g2:#060810;
   --txt:#ffffff; --dim:#8b97ad;
   --acc:#1a6cff; --acc-soft:rgba(26,108,255,.28);
-  --rtrack:#1b2436; --rtrackL:#c9d5e8;
   --ok:#43d17c; --warn:#ffb300; --bad:#ff5252;
   --shadow:rgba(0,0,0,.6);
+  /* VW-dial (donker = R-modus) */
+  --rimC:#9fb0c4; --tickC:#d7e1ee; --numC:#eef3fa; --needleC:#2e86ff; --hubFill:#10151f;
 }
 body.light{
   --bg:#e9eef5; --bg2:#f6f9fd; --panel:#ffffff; --line:#d3dce8;
-  --g1:#ffffff; --g2:#dde6f1;
   --txt:#101d33; --dim:#52627a;
   --acc:#0b57d0; --acc-soft:rgba(11,87,208,.16);
-  --rtrack:#c9d5e8;
   --shadow:rgba(30,60,90,.18);
+  /* VW-dial (lig = dag-aansig) */
+  --rimC:#6a7a90; --tickC:#2e3c50; --numC:#1c2a40; --needleC:#0b57d0; --hubFill:#ffffff;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
@@ -29,10 +29,7 @@ body{
 }
 .hidden{display:none!important}
 .dim{color:var(--dim);font-size:.85rem}
-.banner{
-  background:#3a2410;color:#ffd9a0;font-size:.85rem;text-align:center;
-  padding:.55rem 1rem;
-}
+.banner{background:#3a2410;color:#ffd9a0;font-size:.85rem;text-align:center;padding:.55rem 1rem}
 body.light .banner{background:#fde8cd;color:#7a4b12}
 
 /* ── topbar ── */
@@ -44,48 +41,36 @@ body.light .banner{background:#fde8cd;color:#7a4b12}
 .dot.on{background:var(--ok);box-shadow:0 0 0 3px rgba(67,209,124,.2)}
 @keyframes pulse{50%{opacity:.45}}
 
-/* ── gauge — VW-virtuele-kajuit-styl ── */
-.gauge-wrap{display:flex;justify-content:center;padding:.4rem 0 .2rem}
-.gauge{position:relative;width:min(88vw,350px);aspect-ratio:1;border-radius:50%;
-  background:radial-gradient(circle at 50% 18%, var(--g1) 0%, var(--g2) 72%);
-  box-shadow:inset 0 0 46px var(--shadow);
-}
-/* boog-ring: dun sirkelband wat met 'n masker uitgesny word */
-.ring{position:absolute;inset:0;border-radius:50%;pointer-events:none;
-  -webkit-mask:radial-gradient(farthest-side at 50% 50%, transparent 83%, #000 84%, #000 96%, transparent 97%);
-          mask:radial-gradient(farthest-side at 50% 50%, transparent 83%, #000 84%, #000 96%, transparent 97%);
-}
-.ring.track{z-index:1;background:conic-gradient(from 240deg, var(--rtrack) 0deg 480deg, transparent 480deg)}
-.ring.prog{z-index:2;
-  background:conic-gradient(from 240deg,
-    var(--acc) 0deg,
-    var(--acc) calc(240deg + var(--frac,0)*240deg),
-    transparent calc(240deg + var(--frac,0)*240deg + 1deg));
-  filter:drop-shadow(0 0 6px var(--acc-soft));
-}
-/* skaal-etikette */
-.gscale{position:absolute;inset:0;pointer-events:none;z-index:3}
-.glabel{position:absolute;transform:translate(-50%,-50%);
-  font-size:clamp(.62rem,2.6vw,.85rem);font-weight:600;color:var(--dim);
-  font-variant-numeric:tabular-nums}
-/* sentrum */
-.gauge-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:4}
-.speed{display:flex;align-items:flex-end;gap:.4rem}
-#speedNum{font-size:clamp(4rem,18vw,6rem);font-weight:200;letter-spacing:-.015em;
+/* ── gauge — VW Golf 8 Classic-meter ── */
+.gauge-wrap{display:flex;justify-content:center;padding:.35rem 0 .1rem}
+.gauge{position:relative;width:min(92vw,370px);aspect-ratio:1;border-radius:50%;
+  box-shadow:0 8px 34px var(--shadow), inset 0 0 34px var(--shadow)}
+.dial{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visible}
+.face{fill:url(#faceGradDark)}
+body.light .face{fill:url(#faceGradLight)}
+.rim{stroke:var(--rimC);stroke-width:1.8;opacity:.9}
+.tick{stroke:var(--tickC);stroke-width:1.2;opacity:.55}
+.tick.major{stroke-width:2;opacity:.95}
+.tnum{fill:var(--numC);font-size:7.2px;font-weight:600;font-family:inherit;letter-spacing:.2px}
+.needle polygon{fill:var(--needleC);filter:drop-shadow(0 1px 2px rgba(20,90,220,.45))}
+.hubCap{fill:var(--hubFill);stroke:var(--rimC);stroke-width:1.8}
+.hubDot{fill:var(--needleC)}
+/* digitale spoed-venster onder in die dial (soos die kajuit se digitale spoed) */
+.digi{position:absolute;left:0;right:0;bottom:6%;display:flex;align-items:baseline;justify-content:center;gap:.4rem;pointer-events:none;z-index:2}
+#speedNum{font-size:clamp(2.5rem,11vw,3.9rem);font-weight:300;letter-spacing:-.01em;
   font-variant-numeric:tabular-nums;line-height:1;color:var(--txt)}
-.unit{color:var(--dim);font-weight:600;font-size:clamp(.85rem,3.4vw,1.15rem);
-  text-transform:uppercase;letter-spacing:.14em;padding-bottom:.7em}
-.rbadge{width:clamp(1.5rem,7vw,2.1rem);height:clamp(1.5rem,7vw,2.1rem);border-radius:50%;
-  display:flex;align-items:center;justify-content:center;margin-top:.55rem;
-  background:radial-gradient(circle at 32% 28%, #4d8dff, var(--acc) 70%);
-  color:#fff;font-weight:800;font-style:italic;font-size:clamp(.7rem,3vw,.95rem);
-  box-shadow:0 0 14px var(--acc-soft)}
-.demo{position:absolute;top:4%;left:50%;transform:translateX(-50%);background:var(--bad);color:#fff;
-  font-size:.66rem;font-weight:800;letter-spacing:.14em;padding:.22rem .6rem;border-radius:99px;z-index:5}
+.unit{color:var(--dim);font-weight:600;font-size:clamp(.72rem,3vw,.95rem);
+  text-transform:uppercase;letter-spacing:.16em}
+.rb{display:inline-flex;align-items:center;justify-content:center;width:1.35em;height:1.35em;border-radius:50%;
+  background:radial-gradient(circle at 32% 28%, #5d96ff, var(--acc) 72%);
+  color:#fff;font-weight:800;font-style:italic;font-size:clamp(.6rem,2.4vw,.8rem);
+  box-shadow:0 0 10px var(--acc-soft);transform:translateY(-.05em)}
+.demo{position:absolute;top:1.5%;left:50%;transform:translateX(-50%);background:var(--bad);color:#fff;
+  font-size:.64rem;font-weight:800;letter-spacing:.14em;padding:.2rem .55rem;border-radius:99px;z-index:3}
 
 /* ── stats ── */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.55rem;padding:.8rem 1rem}
-.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:.7rem .35rem;
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.55rem;padding:.7rem 1rem}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:.68rem .35rem;
   text-align:center;box-shadow:0 4px 14px var(--shadow);position:relative;overflow:hidden}
 .stat::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;
   background:linear-gradient(90deg,transparent,var(--acc),transparent);opacity:.8}
@@ -93,38 +78,38 @@ body.light .banner{background:#fde8cd;color:#7a4b12}
 .stat-lbl{font-size:.6rem;color:var(--dim);margin-top:.18rem;text-transform:uppercase;letter-spacing:.09em}
 
 /* ── kontroles ── */
-footer{margin-top:auto;padding:.6rem 1rem calc(1rem + env(safe-area-inset-bottom))}
+footer{margin-top:auto;padding:.5rem 1rem calc(1rem + env(safe-area-inset-bottom))}
 .controls{display:flex;gap:.55rem;align-items:center}
-.controls.smalls{display:grid;grid-template-columns:repeat(5,1fr);gap:.5rem;margin-top:.55rem}
+.controls.smalls{display:grid;grid-template-columns:repeat(5,1fr);gap:.5rem;margin-top:.5rem}
 button{border:0;border-radius:12px;font-weight:700;cursor:pointer;font-size:1rem;color:var(--txt);
-  background:var(--panel);border:1px solid var(--line);padding:.85rem .5rem;transition:transform .06s,background .2s}
+  background:var(--panel);border:1px solid var(--line);padding:.8rem .5rem;transition:transform .06s,background .2s}
 button:active{transform:scale(.96)}
-button.big{flex:1;background:linear-gradient(135deg,#1250c8,#1a6cff);border-color:transparent;font-size:1.15rem;padding:.9rem 1rem;color:#fff}
+button.big{flex:1;background:linear-gradient(135deg,#1250c8,#1a6cff);border-color:transparent;font-size:1.15rem;padding:.85rem 1rem;color:#fff}
 button.big.active{background:linear-gradient(135deg,#a35c00,#e67e00);border-color:transparent}
 button.small{font-size:.95rem}
 button.on{background:var(--acc-soft);border-color:var(--acc);color:var(--acc)}
 body.light button.on{color:#0b57d0}
-.hint{text-align:center;margin-top:.6rem;font-size:.72rem}
+.hint{text-align:center;margin-top:.55rem;font-size:.72rem}
 
 /* ── LANDSCAPE (kar-montering / split-skerm) ── */
 @media (orientation:landscape) and (max-height:520px){
-  #topbar{padding:.35rem .9rem}
-  main{flex:1;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:2.2vw;min-height:0;padding:.2rem .6rem}
+  #topbar{padding:.3rem .9rem}
+  main{flex:1;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:2.2vw;min-height:0;padding:.15rem .6rem}
   .gauge-wrap{flex:0 0 auto;padding:0}
-  .gauge{width:min(44vh,38vw,300px)}
-  #speedNum{font-size:clamp(3rem,14vh,5.2rem)}
-  .stats{grid-template-columns:1fr 1fr;gap:.45rem;width:min(38vw,340px);padding:0}
-  .stat{padding:.45rem .2rem;border-radius:12px}
+  .gauge{width:min(46vh,40vw,310px)}
+  #speedNum{font-size:clamp(1.9rem,9vh,3.1rem)}
+  .stats{grid-template-columns:1fr 1fr;gap:.45rem;width:min(38vw,330px);padding:0}
+  .stat{padding:.42rem .2rem;border-radius:12px}
   .stat-val{font-size:clamp(1rem,4.5vh,1.35rem)}
-  footer{padding:.35rem .9rem calc(.4rem + env(safe-area-inset-bottom))}
-  .controls.smalls{margin-top:.4rem;gap:.4rem}
+  footer{padding:.3rem .9rem calc(.4rem + env(safe-area-inset-bottom))}
+  .controls.smalls{margin-top:.35rem;gap:.4rem}
   button{padding:.55rem .3rem;border-radius:11px}
   button.big{padding:.6rem .5rem}
-  .hint{margin-top:.35rem;font-size:.65rem}
+  .hint{margin-top:.3rem;font-size:.62rem}
 }
 @media (orientation:landscape) and (min-height:521px){
   main{flex:1;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:2vw;min-height:0}
   .gauge-wrap{flex:0 0 auto;padding:0}
-  .gauge{width:min(62vh,44vw,350px)}
+  .gauge{width:min(64vh,46vw,360px)}
   .stats{grid-template-columns:1fr 1fr;gap:.5rem;width:min(40vw,360px);padding:0}
 }

@@ -117,32 +117,57 @@ function onGeoError(err) {
   if (!state.demo) els.accText.textContent = '–';
 }
 
-// ── naald & syfers (240°-meter, volskaal 240 km/h) ──
-function updateDisplay() {
-  const kmh = state.speedShown * KMH;                    // vertoon altyd vanaf km/h
-  const frac = Math.min(1, Math.max(0, kmh / 240));
-  const g = $('gauge');
-  if (g) g.style.setProperty('--frac', frac.toFixed(4));
-  els.speedNum.textContent = Math.round(kmh * uf(state.unit));
+// ── VW Golf 8 Classic-dial (SVG): skaal 0-240, merke, syfers, naald ──
+function buildDial() {
+  const svg = document.getElementById('dialSvg');
+  if (!svg) return;
+  const NS = 'http://www.w3.org/2000/svg';
+  const ticksG = document.getElementById('ticks');
+  const numsG = document.getElementById('nums');
+  const c = 100;
+  // merke: elke 10 km/h; lank (major) elke 20
+  for (let v = 0; v <= 240; v += 10) {
+    const a = (240 + v) * Math.PI / 180;
+    const ux = Math.sin(a), uy = -Math.cos(a);
+    const major = v % 20 === 0;
+    const r1 = major ? 94.5 : 92.5, r2 = major ? 86.5 : 90;
+    const l = document.createElementNS(NS, 'line');
+    l.setAttribute('class', 'tick' + (major ? ' major' : ''));
+    l.setAttribute('x1', (c + ux * r1).toFixed(2)); l.setAttribute('y1', (c + uy * r1).toFixed(2));
+    l.setAttribute('x2', (c + ux * r2).toFixed(2)); l.setAttribute('y2', (c + uy * r2).toFixed(2));
+    ticksG.appendChild(l);
+  }
+  // syfers elke 20 km/h, horisontaal, binne die merke
+  for (let v = 0; v <= 240; v += 20) {
+    const a = (240 + v) * Math.PI / 180;
+    const r = 78;
+    const t = document.createElementNS(NS, 'text');
+    t.setAttribute('class', 'tnum');
+    t.setAttribute('x', (c + Math.sin(a) * r).toFixed(2));
+    t.setAttribute('y', (c - Math.cos(a) * r + 2.6).toFixed(2));
+    t.setAttribute('text-anchor', 'middle');
+    t.textContent = v;
+    numsG.appendChild(t);
+  }
+  // dun naald (R-blou), van die hub na buite
+  const mount = document.getElementById('needleMount');
+  const needle = document.createElementNS(NS, 'g');
+  needle.setAttribute('class', 'needle');
+  const poly = document.createElementNS(NS, 'polygon');
+  poly.setAttribute('points', '-2.4,16 0,-87 2.4,16');
+  needle.appendChild(poly);
+  mount.appendChild(needle);
+  mount.setAttribute('transform', 'translate(100 100) rotate(240)');
 }
 
-// ── VW-tipe skaal-etikette (0..240) langs die boog ──
-function buildScale() {
-  const host = document.getElementById('gscale');
-  if (!host) return;
-  const vals = [0, 40, 80, 120, 160, 200, 240];
-  vals.forEach(v => {
-    const a = (-120 + (v / 240) * 240) * Math.PI / 180;  // 0° = bo
-    const r = 37;
-    const s = document.createElement('span');
-    s.className = 'glabel';
-    s.textContent = v;
-    s.style.left = (50 + r * Math.sin(a)).toFixed(2) + '%';
-    s.style.top = (50 - r * Math.cos(a)).toFixed(2) + '%';
-    host.appendChild(s);
-  });
+// vertoon: draai die naald (240° + km/h) en werk die digitale spoed by
+function updateDisplay() {
+  const kmh = Math.min(240, state.speedShown * KMH);
+  const nm = document.getElementById('needleMount');
+  if (nm) nm.setAttribute('transform', 'translate(100 100) rotate(' + (240 + kmh).toFixed(2) + ')');
+  els.speedNum.textContent = Math.round(kmh * uf(state.unit));
 }
-buildScale();
+buildDial();
 
 // gladde vertoon-lus (speedShown is in m/s; elke raam na die teiken toe)
 function loop() {
