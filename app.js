@@ -329,26 +329,38 @@ els.btnTheme.addEventListener('click', () => {
 applyTheme();
 setInterval(applyTheme, 60000);
 
-// ── YouTube Music — one big tap: opens the real app if installed, else the site ──
+// ── YouTube Music — probeer die regte app, val terug na die webwerf ──
+let musicTimer = null;
 els.btnMusic.addEventListener('click', () => {
-  if (/Android/i.test(navigator.userAgent)) {
-    try {
-      window.location.href = 'intent://music.youtube.com/#Intent;scheme=https;' +
-        'package=com.google.android.apps.youtube.music;' +
-        'S.browser_fallback_url=https%3A%2F%2Fmusic.youtube.com%2F;end';
-    } catch (e) {
-      window.open('https://music.youtube.com/', '_blank');
-    }
-  } else {
+  if (!/Android/i.test(navigator.userAgent)) {
     window.open('https://music.youtube.com/', '_blank');
+    return;
   }
+  clearTimeout(musicTimer);
+  // anker-intent (betroubaarder as location.href, ook in die PWA-venster)
+  const a = document.createElement('a');
+  a.setAttribute('rel', 'noopener');
+  a.href = 'intent://music.youtube.com/#Intent;scheme=https;' +
+    'package=com.google.android.apps.youtube.music;' +
+    'S.browser_fallback_url=https%3A%2F%2Fmusic.youtube.com%2F;end';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  // as die app nie oopmaak nie (die bladsy bly sigbaar), val terug na die webwerf
+  musicTimer = setTimeout(() => {
+    window.open('https://music.youtube.com/', '_blank');
+  }, 1500);
 });
 
 // allow free rotation even if a previous lock is still held
 try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {}
 
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && state.running && !state.paused && !state.demo) startGps();
+  if (document.hidden) {
+    clearTimeout(musicTimer);          // die YouTube Music-app is oop — moenie die webwerf ook oopmaak nie
+  } else if (state.running && !state.paused && !state.demo) {
+    startGps();
+  }
 });
 
 if (!('geolocation' in navigator) && !location.protocol.startsWith('https') && location.hostname !== 'localhost') {
