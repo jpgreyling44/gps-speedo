@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="af">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Spoedmeter</title>
+<meta name="description" content="Live GPS-spoedmeter vir die kar — spoed, afstand, maksimum en gemiddelde spoed.">
+<meta name="theme-color" content="#0b0e14">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Spoedmeter">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="secureBanner" class="hidden banner">⚠ GPS benodig HTTPS of toestemming — gebruik Demo om te toets.</div>
+
+<header id="topbar">
+  <div class="gps">
+    <span id="gpsDot" class="dot off"></span>
+    <span id="gpsText">GPS soek…</span>
+  </div>
+  <div id="accText" class="dim">±– m</div>
+  <div id="clock" class="dim">--:--</div>
+</header>
+
+<main>
+  <div class="gauge-wrap">
+    <div class="gauge" id="gauge">
+      <div class="ticks" aria-hidden="true"></div>
+      <div class="needle" id="needle"></div>
+      <div class="hub"></div>
+      <div class="gauge-center">
+        <div class="speed"><span id="speedNum">0</span><span id="speedUnit" class="unit">km/h</span></div>
+        <div id="demoBadge" class="demo hidden">DEMO</div>
+      </div>
+    </div>
+  </div>
+
+  <section id="stats" class="stats">
+    <div class="stat"><div class="stat-val" id="distVal">0.00</div><div class="stat-lbl">km afstand</div></div>
+    <div class="stat"><div class="stat-val" id="maxVal">0</div><div class="stat-lbl">maks km/h</div></div>
+    <div class="stat"><div class="stat-val" id="avgVal">0</div><div class="stat-lbl">gem km/h</div></div>
+    <div class="stat"><div class="stat-val" id="tripTimeVal">00:00</div><div class="stat-lbl">rytyd</div></div>
+  </section>
+</main>
+
+<footer>
+  <div class="controls">
+    <button id="btnStart" class="big">▶ Begin</button>
+    <button id="btnUnit" class="small" title="Wissel km/h / mph">km/h</button>
+    <button id="btnWake" class="small" title="Hou skerm aan">☀</button>
+    <button id="btnDemo" class="small" title="Demo-modus (geen GPS)">Demo</button>
+  </div>
+  <div class="hint dim">GPS-spoed — moenie met die foon peuter terwyl jy bestuur nie.</div>
+</footer>
+
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+if (window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
+  document.documentElement.classList.add('pwa-mode');
+}
+</script>
+<script src="app.js"></script>
+</body>
+</html>
