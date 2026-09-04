@@ -121,9 +121,28 @@ function onGeoError(err) {
 function updateDisplay() {
   const kmh = state.speedShown * KMH;                    // vertoon altyd vanaf km/h
   const frac = Math.min(1, Math.max(0, kmh / 240));
-  els.needle.style.transform = `translateX(-50%) rotate(${-120 + frac * 240}deg)`;
+  const g = $('gauge');
+  if (g) g.style.setProperty('--frac', frac.toFixed(4));
   els.speedNum.textContent = Math.round(kmh * uf(state.unit));
 }
+
+// ── VW-tipe skaal-etikette (0..240) langs die boog ──
+function buildScale() {
+  const host = document.getElementById('gscale');
+  if (!host) return;
+  const vals = [0, 40, 80, 120, 160, 200, 240];
+  vals.forEach(v => {
+    const a = (-120 + (v / 240) * 240) * Math.PI / 180;  // 0° = bo
+    const r = 37;
+    const s = document.createElement('span');
+    s.className = 'glabel';
+    s.textContent = v;
+    s.style.left = (50 + r * Math.sin(a)).toFixed(2) + '%';
+    s.style.top = (50 - r * Math.cos(a)).toFixed(2) + '%';
+    host.appendChild(s);
+  });
+}
+buildScale();
 
 // gladde vertoon-lus (speedShown is in m/s; elke raam na die teiken toe)
 function loop() {
