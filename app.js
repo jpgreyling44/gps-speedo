@@ -2,20 +2,19 @@
 'use strict';
 
 const $ = id => document.getElementById(id);
-const KMH = 3.6, MPH = 2.236936, M2KM = 0.001;
+const KMH = 3.6, M2KM = 0.001;
 
 const els = {
   speedNum: $('speedNum'), speedUnit: $('speedUnit'),
   gpsDot: $('gpsDot'), gpsText: $('gpsText'), accText: $('accText'), clock: $('clock'),
   distVal: $('distVal'), maxVal: $('maxVal'), avgVal: $('avgVal'), tripTimeVal: $('tripTimeVal'),
   lblDist: $('lblDist'), lblTop: $('lblTop'), lblAvg: $('lblAvg'),
-  btnStart: $('btnStart'), btnReset: $('btnReset'), btnUnit: $('btnUnit'), btnFs: $('btnFs'),
+  btnStart: $('btnStart'), btnReset: $('btnReset'), btnFs: $('btnFs'),
   btnWake: $('btnWake'), btnDemo: $('btnDemo'), btnTheme: $('btnTheme'), btnMusic: $('btnMusic'),
   demoBadge: $('demoBadge'), banner: $('secureBanner'),
 };
 
 const state = {
-  unit: localStorage.getItem('speedo_unit') || 'kmh',
   running: false, paused: false, demo: false,
   watchId: null, demoTimer: null, wakeLock: null,
   speedTarget: 0, speedShown: 0,
@@ -23,22 +22,18 @@ const state = {
   trip: { dist: 0, top: 0, movingMs: 0, startTs: null },
 };
 
-// ── units ──
-const vertoon = u => u === 'kmh' ? 'km/h' : 'mph';
-const uf = u => u === 'mph' ? 0.621371 : 1;            // km/h -> display unit
+// ── units (fixed: km/h) ──
 function avgKph() {                                    // average in km/h
   const ms = state.trip.movingMs;
   if (!ms) return 0;
   return (state.trip.dist / 1000) / (ms / 3600000);
 }
 
-function setUnit(u) {
-  state.unit = u; localStorage.setItem('speedo_unit', u);
-  els.btnUnit.textContent = vertoon(u);
-  els.speedUnit.textContent = vertoon(u);
-  els.lblDist.textContent = u === 'mph' ? 'DIST (mi)' : 'DIST (km)';
-  els.lblTop.textContent = u === 'mph' ? 'TOP (mph)' : 'TOP (km/h)';
-  els.lblAvg.textContent = u === 'mph' ? 'AVG (mph)' : 'AVG (km/h)';
+function syncUnits() {
+  els.speedUnit.textContent = 'km/h';
+  els.lblDist.textContent = 'DIST (km)';
+  els.lblTop.textContent = 'TOP (km/h)';
+  els.lblAvg.textContent = 'AVG (km/h)';
   updateDisplay();
 }
 
@@ -161,7 +156,7 @@ function updateDisplay() {
   const kmh = Math.min(240, Math.max(0, state.speedShown * KMH));
   const nm = document.getElementById('needleMount');
   if (nm) nm.setAttribute('transform', 'translate(100 100) rotate(' + (240 + kmh).toFixed(2) + ')');
-  els.speedNum.textContent = Math.round(kmh * uf(state.unit));
+  els.speedNum.textContent = Math.round(kmh);
 }
 buildDial();
 
@@ -230,9 +225,9 @@ function stopDemo() {
 // ── trip controls ──
 function renderTrip() {
   const km = state.trip.dist * M2KM;
-  els.distVal.textContent = (state.unit === 'mph' ? km * 0.621371 : km).toFixed(2);
-  els.avgVal.textContent = Math.round(avgKph() * uf(state.unit));
-  els.maxVal.textContent = Math.round(state.trip.top * uf(state.unit));
+  els.distVal.textContent = km.toFixed(2);
+  els.avgVal.textContent = Math.round(avgKph());
+  els.maxVal.textContent = Math.round(state.trip.top);
   els.tripTimeVal.textContent = fmtTime(state.trip.movingMs);
 }
 function resetTrip() {
@@ -281,9 +276,7 @@ function doStop() {
   if (!state.demo) { stopGps(); setGps('wait', 'Searching GPS…'); }
 }
 
-els.btnUnit.addEventListener('click', () => setUnit(state.unit === 'kmh' ? 'mph' : 'kmh'));
-
-// ── fullscreen (weg met die blaaier-raam) ──
+// ── fullscreen (no browser frame while driving) ──
 function goFullscreen() {
   const el = document.documentElement;
   if (!document.fullscreenElement && el.requestFullscreen) {
@@ -368,7 +361,7 @@ if (!('geolocation' in navigator) && !location.protocol.startsWith('https') && l
 }
 
 // startup
-setUnit(state.unit);
+syncUnits();
 resetTrip();
 
 // ── automated test hook (development: ?autotest=1, optional &spd=120) ──
@@ -394,8 +387,6 @@ if (qp.has('autotest')) {
       demo: !els.demoBadge.classList.contains('hidden'),
       unit: els.speedUnit.textContent,
     };
-    els.btnUnit.click();
-    const res2 = { speed_mph: els.speedNum.textContent, unit: els.speedUnit.textContent };
-    document.body.setAttribute('data-autotest', JSON.stringify({ ...res1, ...res2 }));
+    document.body.setAttribute('data-autotest', JSON.stringify(res1));
   }, 9000);
 }

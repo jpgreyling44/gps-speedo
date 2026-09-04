@@ -14,11 +14,11 @@ everything runs on the phone. Optimized for landscape mounting in a car.
 - Rotate the phone freely — the layout adapts automatically (portrait / landscape).
 - **▶ Start** — starts the trip (asks GPS permission first time).
 - **⏸ Pause / ▶ Resume** — pause without losing the trip. **Reset** — stop & clear.
-- **🎵 YouTube Music** — one big tap opens the app (or the website). For music
-  next to the speedo: open the app, tap the recent-apps button, tap the Speedo
+- **🎵 YouTube Music** — opens the YouTube Music app (or the website if not installed).
+  For music next to the speedo: open the app, tap the recent-apps button, tap the Speedo
   card icon → "Open in split screen" → pick YouTube Music.
-- **km/h / mph**, **🌞/🌙** day/night (auto by time; tap to lock), **☀** keep
-  screen on, **Demo** to test without GPS.
+- **🌞/🌙** day/night (auto by time; tap to lock), **☀** keep screen on, **Demo** to test
+  without GPS, **⛶** fullscreen. Speed is always km/h.
 
 ## Accuracy tips
 
